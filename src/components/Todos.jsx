@@ -1,53 +1,31 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TodoList from "./todoList";
 import { v4 as uuidv4 } from 'uuid';
+import NewTodoInput from "./NewTodoInput";
 
 
 export default function Todos() {
 
-    const [todos, setTodos] = useState(
-        [
-            {
-                id: uuidv4(),
-                title: 'Tailwind CSS To DO App List 1',
-                status: false
-            },
-            {
-                id: uuidv4(),
-                title: 'Tailwind CSS To DO App List 2',
-                status: true
-            }
+    const [todos, setTodos] = useState([]);
 
-        ]
-    );
+    const addNewTodoHandler = (newTodoTitle) => {
 
-    const [newTodo, setNewTodo] = useState()
-
-    const onInputNewTodoChangeHandler = (event) => {
-        setNewTodo(event.target.value)
-    };
-
-    const addNewTodoHandler = (event) => {
-
-        if (event.key == 'Enter' && event.target.value != '') {
-
-            setTodos([
+        setTodos(
+            [
                 ...todos,
                 {
-                    title: newTodo,
+                    id: uuidv4(),
+                    title: newTodoTitle,
                     status: false
                 }
             ]
-            ),
+        )
 
-                setNewTodo('');
-
-        }
     };
 
     const deleteTodoHandler = (todo) => {
 
-        const newTodos = todos.filter((todoItem) => {
+        let newTodos = todos.filter((todoItem) => {
             return todoItem.id !== todo.id;
         })
         setTodos(newTodos);
@@ -87,6 +65,17 @@ export default function Todos() {
         setTodos(newTodo);
     }
 
+    useEffect(() => {
+        setTodos(JSON.parse(localStorage.getItem('todos_list')) ?? [])
+
+    }, [])
+
+    useEffect(() => {
+        localStorage.setItem('todos_list', JSON.stringify(todos));
+        console.log(localStorage.getItem('todos_list'));
+
+    }, [todos])
+
 
     return (
 
@@ -95,13 +84,7 @@ export default function Todos() {
                 <div className="flex items-center mb-6">
                     <h1 className="mr-6 text-4xl font-bold text-purple-600"> TO DO APP</h1>
                 </div>
-                <div className="relative">
-                    <input type="text" placeholder="What needs to be done today?"
-                        onChange={onInputNewTodoChangeHandler}
-                        onKeyDown={addNewTodoHandler}
-                        value={newTodo}
-                        className="w-full px-2 py-3 border rounded outline-none border-grey-600" />
-                </div>
+                <NewTodoInput addTodo={addNewTodoHandler} />
                 <TodoList todos={todos} deleteTodoHandler={deleteTodoHandler} toggleTodoStatusHandler={toggleTodoStatusHandler} editTodoTitleHandler={editTodoTitleHandler} />
             </div>
         </div>
