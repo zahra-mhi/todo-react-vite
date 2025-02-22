@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import TodoList from "./todoList";
 import { v4 as uuidv4 } from 'uuid';
 import NewTodoInput from "./NewTodoInput";
 import { toast } from "react-toastify";
+import todoReducer from "../reducers/todoReducer";
 
 
 export default function Todos() {
 
-    const [todos, setTodos] = useState([]);
+    // const [todos, setTodos] = useState([]);
+
+    const [todos, todoDispatcher] = useReducer(todoReducer, [])
 
     const addNewTodoHandler = async (newTodoTitle) => {
 
@@ -23,13 +26,12 @@ export default function Todos() {
             })
 
             let todoData = await res.json();
-            setTodos(
-                [
-                    ...todos,
-                    todoData
-                ]
-            )
-            console.log(todos);
+
+            todoDispatcher({
+                type: 'add',
+                todoData
+
+            })
             toast.success('todo created !')
 
         } catch (error) {
@@ -45,8 +47,10 @@ export default function Todos() {
         })
 
         if (res.ok) {
-            let newTodos = todos.filter((todoItem) => todoItem.id !== todo.id);
-            setTodos(newTodos);
+            todoDispatcher({
+                type: 'delete',
+                id: todo.id
+            })
             toast.success('todo deleted successfully !')
 
         } else {
@@ -67,17 +71,10 @@ export default function Todos() {
 
         if (res.ok) {
 
-            let newTodos = todos.map((todoItem) => {
-
-                if (todoItem.id == todo.id) {
-
-                    todoItem.status = !todoItem.status;
-
-                }
-                return todoItem;
+            todoDispatcher({
+                type: 'toggle-status',
+                id: todo.id
             })
-
-            setTodos(newTodos);
 
         } else {
             let message = await res.json();
@@ -96,25 +93,16 @@ export default function Todos() {
         })
 
         if (res.ok) {
-
-            let newTodo = todos.map((todoItem) => {
-
-                if (todoItem.id == todo.id) {
-
-                    todoItem.title = newTitle;
-
-                }
-                return todoItem;
-
+            todoDispatcher({
+                type: 'edit-title',
+                id: todo.id,
+                newTitle
             })
-
-            setTodos(newTodo);
 
         } else {
             let message = await res.json();
             toast.error(message);
         }
-
 
     }
 
@@ -123,10 +111,15 @@ export default function Todos() {
         try {
 
             let res = await fetch('https://67b30741bc0165def8cf9bd0.mockapi.io/todos')
-            let Todos = await res.json();
+            let todos = await res.json();
 
             if (res.ok) {
-                setTodos(Todos)
+                todoDispatcher(
+                    {
+                        type: 'initial-todos',
+                        todos
+                    }
+                )
             }
 
             //show eror
@@ -155,7 +148,6 @@ export default function Todos() {
                 <TodoList todos={todos} deleteTodoHandler={deleteTodoHandler} toggleTodoStatusHandler={toggleTodoStatusHandler} editTodoTitleHandler={editTodoTitleHandler} />
             </div>
         </div>
-
 
     )
 
