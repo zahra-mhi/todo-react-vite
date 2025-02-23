@@ -1,10 +1,10 @@
 import { useEffect, useReducer, useState } from "react";
-import TodoList from "./todoList";
+import TodoList from "./TodoList";
 import { v4 as uuidv4 } from 'uuid';
 import NewTodoInput from "./NewTodoInput";
 import { toast } from "react-toastify";
 import todoReducer from "../reducers/todoReducer";
-
+import { TodosContext } from "../contexts/TodosContext";
 
 export default function Todos() {
 
@@ -39,72 +39,6 @@ export default function Todos() {
         }
 
     };
-
-    const deleteTodoHandler = async (todo) => {
-
-        let res = await fetch(`https://67b30741bc0165def8cf9bd0.mockapi.io/todos/${todo.id}`, {
-            method: 'DELETE'
-        })
-
-        if (res.ok) {
-            todoDispatcher({
-                type: 'delete',
-                id: todo.id
-            })
-            toast.success('todo deleted successfully !')
-
-        } else {
-            let message = await res.json();
-            toast.error(message);
-        }
-
-    };
-
-
-    const toggleTodoStatusHandler = async (todo) => {
-
-        const res = await fetch(`https://67b30741bc0165def8cf9bd0.mockapi.io/todos/${todo.id}`, {
-            method: 'PUT',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ status: !todo.status })
-        })
-
-        if (res.ok) {
-
-            todoDispatcher({
-                type: 'toggle-status',
-                id: todo.id
-            })
-
-        } else {
-            let message = await res.json();
-            toast.error(message);
-        }
-
-    }
-
-
-    const editTodoTitleHandler = async (todo, newTitle) => {
-
-        const res = await fetch(`https://67b30741bc0165def8cf9bd0.mockapi.io/todos/${todo.id}`, {
-            method: 'PUT',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ title: newTitle })
-        })
-
-        if (res.ok) {
-            todoDispatcher({
-                type: 'edit-title',
-                id: todo.id,
-                newTitle
-            })
-
-        } else {
-            let message = await res.json();
-            toast.error(message);
-        }
-
-    }
 
     const getTodosFromApi = async () => {
 
@@ -145,7 +79,10 @@ export default function Todos() {
                     <h1 className="mr-6 text-4xl font-bold text-purple-600"> TO DO APP</h1>
                 </div>
                 <NewTodoInput addTodo={addNewTodoHandler} />
-                <TodoList todos={todos} deleteTodoHandler={deleteTodoHandler} toggleTodoStatusHandler={toggleTodoStatusHandler} editTodoTitleHandler={editTodoTitleHandler} />
+
+                <TodosContext.Provider value={{ todos, todoDispatcher }}>
+                    <TodoList />
+                </TodosContext.Provider>
             </div>
         </div>
 
